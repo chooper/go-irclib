@@ -269,7 +269,7 @@ func (irc *IRCClient) Connect(server string) error {
 	return nil
 }
 
-func (irc *IRCClient) AddHook(f func (*Event)) {
+func (irc *IRCClient) AddHandler(f func (*Event)) {
 	messages := irc.broadcast.Listen()
 
 	go func() {
@@ -322,7 +322,7 @@ func New(nick, user string) *IRCClient {
 	}
 
 	// Add default IRC client handlers
-	irc.AddHook(defaultHandlers)
+	irc.AddHandler(defaultHandlers)
 
 	return irc
 }
