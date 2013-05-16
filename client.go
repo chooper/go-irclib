@@ -183,15 +183,15 @@ func (irc *IRCClient) Quit() {
 }
 
 func (irc *IRCClient) Join(channel string) {
-	irc.pwrite <- fmt.Sprintf("JOIN %s\r\n", channel)
+	irc.SendRawf("JOIN %s\r\n", channel)
 }
 
 func (irc *IRCClient) Part(channel string) {
-	irc.pwrite <- fmt.Sprintf("PART %s\r\n", channel)
+	irc.SendRawf("PART %s\r\n", channel)
 }
 
 func (irc *IRCClient) Notice(target, message string) {
-	irc.pwrite <- fmt.Sprintf("NOTICE %s :%s\r\n", target, message)
+	irc.SendRawf("NOTICE %s :%s\r\n", target, message)
 }
 
 func (irc *IRCClient) Noticef(target, format string, a ...interface{}) {
@@ -199,7 +199,7 @@ func (irc *IRCClient) Noticef(target, format string, a ...interface{}) {
 }
 
 func (irc *IRCClient) Privmsg(target, message string) {
-	irc.pwrite <- fmt.Sprintf("PRIVMSG %s :%s\r\n", target, message)
+	irc.SendRawf("PRIVMSG %s :%s\r\n", target, message)
 }
 
 func (irc *IRCClient) Privmsgf(target, format string, a ...interface{}) {
