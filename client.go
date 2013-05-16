@@ -57,6 +57,7 @@ type Event struct {
 	Prefix    string
 	Command   string
 	Arguments []string
+	Client    *IRCClient
 }
 
 func parseIRCMessage(s string) (string, string, []string) {
@@ -105,6 +106,7 @@ func (irc *IRCClient) readLoop() {
 			Prefix: prefix,
 			Command: cmd,
 			Arguments: args,
+			Client: irc,
 		}
 
 		// Publish on broadcast channel
@@ -267,6 +269,47 @@ func (irc *IRCClient) Connect(server string) error {
 	return nil
 }
 
+func (irc *IRCClient) AddHook(f func (*Event)) {
+	messages := irc.broadcast.Listen()
+
+	go func() {
+		for e := range messages {
+			event := e.(*Event)
+			f(event)
+		}
+	}()
+}
+
+func defaultHandlers(event *Event) {
+	log.Printf("<-- %v, %v, %v", event.Prefix, event.Command, event.Arguments)
+	client := event.Client
+
+	switch event.Command {
+	case "PING":
+		client.SendRawf("PONG %s", event.Arguments[len(event.Arguments)-1])
+
+	case "437":
+		// client.currentNickname = client.currentNickname + "_"
+		// client.SendRawf("NICK %s", client.currentNickname)
+
+	case "433":
+		if len(client.currentNickname) > 8 {
+			client.currentNickname = "_" + client.currentNickname
+		} else {
+			client.currentNickname = client.currentNickname + "_"
+		}
+		client.SendRawf("NICK %s", client.currentNickname)
+
+	case "PONG":
+		ns, _ := strconv.ParseInt(event.Raw, 10, 64)
+		delta := time.Duration(time.Now().UnixNano() - ns)
+		log.Printf("Lag: %vs\n", delta)
+
+	case "001":
+		// client.currentNickname = event.Arguments[0]
+	}
+}
+
 func New(nick, user string) *IRCClient {
 	irc := &IRCClient{
 		Nickname:       nick,
@@ -277,43 +320,10 @@ func New(nick, user string) *IRCClient {
 		endping:        make(chan bool),
 		broadcast:      broadcast.NewBroadcaster(),
 	}
-	irc.bindDefaultHandlers()
+
+	// Add default IRC client handlers
+	irc.AddHook(defaultHandlers)
+
 	return irc
 }
 
-func (irc *IRCClient) bindDefaultHandlers() {
-	messages := irc.broadcast.Listen()
-
-	go func() {
-		for e := range messages {
-			evt := e.(*Event)
-			log.Printf("<-- %v, %v, %v", evt.Prefix, evt.Command, evt.Arguments)
-
-			switch evt.Command {
-			case "PING":
-				irc.SendRawf("PONG %s", evt.Arguments[len(evt.Arguments)-1])
-
-			case "437":
-				irc.currentNickname = irc.currentNickname + "_"
-				irc.SendRawf("NICK %s", irc.currentNickname)
-
-			case "433":
-				if len(irc.currentNickname) > 8 {
-					irc.currentNickname = "_" + irc.currentNickname
-
-				} else {
-					irc.currentNickname = irc.currentNickname + "_"
-				}
-				irc.SendRawf("NICK %s", irc.currentNickname)
-
-			case "PONG":
-				ns, _ := strconv.ParseInt(evt.Raw, 10, 64)
-				delta := time.Duration(time.Now().UnixNano() - ns)
-				log.Printf("Lag: %vs\n", delta)
-
-			case "001":
-				irc.currentNickname = evt.Arguments[0]
-			}
-		}
-	}()
-}
