@@ -123,7 +123,8 @@ func (irc *IRCClient) writeLoop() {
 			break
 		}
 
-		log.Printf("--> %s\n", b)
+		log.Printf("--> %s", strings.Trim(b, "\r\n"))
+
 		_, err := irc.socket.Write([]byte(b))
 		if err != nil {
 			irc.errchan <- err
