@@ -281,7 +281,6 @@ func (irc *IRCClient) AddHandler(f func (*Event)) {
 }
 
 func defaultHandlers(event *Event) {
-	log.Printf("<-- %v, %v, %v", event.Prefix, event.Command, event.Arguments)
 	client := event.Client
 
 	switch event.Command {
