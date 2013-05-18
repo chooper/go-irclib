@@ -255,7 +255,7 @@ func (irc *IRCClient) Connect(server string) error {
 	}
 	log.Printf("Connected to %s (%s)\n", irc.Server, irc.socket.RemoteAddr())
 
-	irc.pwrite = make(chan string, 10)
+	irc.pwrite = make(chan string, 1024)
 	irc.errchan = make(chan error, 2)
 
 	go irc.readLoop()
@@ -271,7 +271,7 @@ func (irc *IRCClient) Connect(server string) error {
 }
 
 func (irc *IRCClient) AddHandler(f func (*Event)) {
-	messages := irc.broadcast.Listen()
+	messages := irc.broadcast.Listen(1024)
 
 	go func() {
 		for e := range messages {
@@ -318,7 +318,7 @@ func New(nick, user string) *IRCClient {
 		writerExit:     make(chan bool),
 		pingerExit:     make(chan bool),
 		endping:        make(chan bool),
-		broadcast:      broadcast.NewBroadcaster(),
+		broadcast:      broadcast.NewBroadcaster(1024),
 	}
 
 	// Add default IRC client handlers
