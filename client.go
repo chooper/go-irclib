@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -44,20 +45,21 @@ type IRCClient struct {
 	readerExit, writerExit, pingerExit chan bool   // Channels for notifying goroutine stops
 	endping                            chan bool   // Channel for stopping ping goroutine
 	errchan                            chan error  // Channel for dumping errors
-
 	broadcast                          *broadcast.Broadcaster
 
-	lastMessage time.Time
-	currentNickname     string
-	stopped bool
+	lastMessage     time.Time
+	currentNickname string
+	stopped         bool
+	HighlightRE     *regexp.Regexp
 }
 
 type Event struct {
-	Raw       string
+	Raw       string  // Raw message string
 	Prefix    string
 	Command   string
 	Arguments []string
 	Client    *IRCClient
+	Highlight bool
 }
 
 func parseIRCMessage(s string) (string, string, []string) {
@@ -107,6 +109,7 @@ func (irc *IRCClient) readLoop() {
 			Command: cmd,
 			Arguments: args,
 			Client: irc,
+			Highlight: irc.IsHighlight(msg),
 		}
 
 		// Publish on broadcast channel
@@ -221,6 +224,10 @@ func (irc *IRCClient) Nick(n string) {
 
 func (irc *IRCClient) GetNick() string {
 	return irc.currentNickname
+}
+
+func (irc *IRCClient) IsHighlight(msg string) bool {
+	return strings.Contains(msg, fmt.Sprintf("%s:", irc.Nickname))
 }
 
 // Sends all buffered messages (if possible),
