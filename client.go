@@ -47,7 +47,7 @@ type IRCClient struct {
 	errchan                            chan error  // Channel for dumping errors
 	broadcast                          *broadcast.Broadcaster
 
-	lastMessage     time.Time
+	LastMessage     time.Time
 	currentNickname string
 	stopped         bool
 	HighlightRE     *regexp.Regexp
@@ -97,7 +97,7 @@ func (irc *IRCClient) readLoop() {
 			break
 		}
 
-		irc.lastMessage = time.Now()
+		irc.LastMessage = time.Now()
 		msg = strings.Trim(msg, "\r\n")
 
 		// Parse raw message into Event struct
@@ -145,7 +145,7 @@ func (irc *IRCClient) pingLoop() {
 		select {
 		case <-ticker.C:
 			// Ping if we haven't received anything from the server within 4 minutes
-			if time.Since(irc.lastMessage) >= (4 * time.Minute) {
+			if time.Since(irc.LastMessage) >= (4 * time.Minute) {
 				irc.SendRawf("PING %d", time.Now().UnixNano())
 			}
 		case <-ticker2.C:
