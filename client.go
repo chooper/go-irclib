@@ -1,10 +1,10 @@
 package irc
 
 import (
-	"github.com/mikeclarke/go-broadcast"
 	"bufio"
 	"crypto/tls"
 	"fmt"
+	"github.com/mikeclarke/go-broadcast"
 	"log"
 	"net"
 	"regexp"
@@ -18,27 +18,27 @@ const (
 )
 
 type IRCClient struct {
-	Nickname              string   // Nickname the client will use
-	Password              string   // Password used to log on to the server
-	RealName              string   // Supplied to the server as "Real name" or "ircname"
-	Username              string   // Supplied to the server as the "User name""
-	UserInfo              string   // Sent in reply to a USERINFO CTCP query
-	FingerReply           string   // Sent in reply to a FINGER CTCP query
-	VersionName           string   // CTCP VERSION reply, client name
-	VersionNum            string   // CTCP VERSION reply, client version
-	VersionEnv            string   // CTCP VERSION reply, environment the client is running in
-	SourceURL             string   // CTCP SOURCE reply, the URL of the source code of this client
-	LineRate              int      // Minimum delay between lines sent to the server
-	ErroneousNickFallback string   // Default nickname assigned when ERR_ERRONEUSNICKNAME
+	Nickname              string // Nickname the client will use
+	Password              string // Password used to log on to the server
+	RealName              string // Supplied to the server as "Real name" or "ircname"
+	Username              string // Supplied to the server as the "User name""
+	UserInfo              string // Sent in reply to a USERINFO CTCP query
+	FingerReply           string // Sent in reply to a FINGER CTCP query
+	VersionName           string // CTCP VERSION reply, client name
+	VersionNum            string // CTCP VERSION reply, client version
+	VersionEnv            string // CTCP VERSION reply, environment the client is running in
+	SourceURL             string // CTCP SOURCE reply, the URL of the source code of this client
+	LineRate              int    // Minimum delay between lines sent to the server
+	ErroneousNickFallback string // Default nickname assigned when ERR_ERRONEUSNICKNAME
 
 	// Connection settings
-	Server                string   // Host name to attempt a connection to
-	SSL                   bool     // Use TLS for secure connection
-	socket                net.Conn
+	Server string // Host name to attempt a connection to
+	SSL    bool   // Use TLS for secure connection
+	socket net.Conn
 
-	registered            bool     // Whether or not the user is registered
-	hostname              string   // Host name of the IRC server the client is connected to
-	heartbeatInterval     float64  // Interval, in seconds, to send PING messages for keepalive
+	registered        bool    // Whether or not the user is registered
+	hostname          string  // Host name of the IRC server the client is connected to
+	heartbeatInterval float64 // Interval, in seconds, to send PING messages for keepalive
 
 	// Communication channels
 	pwrite                             chan string // Channel for writing messages to IRC server
@@ -54,7 +54,7 @@ type IRCClient struct {
 }
 
 type Event struct {
-	Raw       string  // Raw message string
+	Raw       string // Raw message string
 	Prefix    string
 	Command   string
 	Arguments []string
@@ -104,11 +104,11 @@ func (irc *IRCClient) readLoop() {
 		prefix, cmd, args := parseIRCMessage(msg)
 
 		event := &Event{
-			Raw: msg,
-			Prefix: prefix,
-			Command: cmd,
+			Raw:       msg,
+			Prefix:    prefix,
+			Command:   cmd,
 			Arguments: args,
-			Client: irc,
+			Client:    irc,
 			Highlight: irc.IsHighlight(msg),
 		}
 
@@ -277,7 +277,7 @@ func (irc *IRCClient) Connect(server string) error {
 	return nil
 }
 
-func (irc *IRCClient) AddHandler(f func (*Event)) {
+func (irc *IRCClient) AddHandler(f func(*Event)) {
 	messages := irc.broadcast.Listen(1024)
 
 	go func() {
@@ -319,13 +319,13 @@ func defaultHandlers(event *Event) {
 
 func New(nick, user string) *IRCClient {
 	irc := &IRCClient{
-		Nickname:       nick,
-		Username:       user,
-		readerExit:     make(chan bool),
-		writerExit:     make(chan bool),
-		pingerExit:     make(chan bool),
-		endping:        make(chan bool),
-		broadcast:      broadcast.NewBroadcaster(1024),
+		Nickname:   nick,
+		Username:   user,
+		readerExit: make(chan bool),
+		writerExit: make(chan bool),
+		pingerExit: make(chan bool),
+		endping:    make(chan bool),
+		broadcast:  broadcast.NewBroadcaster(1024),
 	}
 
 	// Add default IRC client handlers
@@ -333,4 +333,3 @@ func New(nick, user string) *IRCClient {
 
 	return irc
 }
-
