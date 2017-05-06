@@ -137,30 +137,33 @@ func (irc *IRCClient) writeLoop() {
 	irc.writerExit <- true
 }
 
-//Pings the server if we have not recived any messages for 5 minutes
+// Detect if the server has died and drive nick reclaimation too
 func (irc *IRCClient) pingLoop() {
-	ticker := time.NewTicker(1 * time.Minute)   //Tick every minute.
-	ticker2 := time.NewTicker(15 * time.Minute) //Tick every 15 minutes.
+	ping_ticker := time.NewTicker(5 * time.Second)
+	nr_ticker := time.NewTicker(1 * time.Minute)
 	for {
 		select {
-		case <-ticker.C:
-			// Ping if we haven't received anything from the server within 4 minutes
-			if time.Since(irc.LastMessage) >= (4 * time.Minute) {
-				irc.SendRawf("PING %d", time.Now().UnixNano())
+		case <-ping_ticker.C:
+			if time.Since(irc.LastMessage) < (15 * time.Second) {
+				irc.SendRawf("PING %s", time.Now().UnixNano())
+			} else {
+				// Reconnect if it's been at least 30 seconds without data from server
+				irc.Reconnect()
 			}
-		case <-ticker2.C:
-			// Ping every 15 minutes.
-			irc.SendRawf("PING %d", time.Now().UnixNano())
-
+		case <-nr_ticker.C:
 			// Try to recapture nickname if it's not as configured.
 			if irc.Nickname != irc.currentNickname {
+				// FIXME I'm pretty sure this doesn't work
+				// I mean, we should probably actually have a handler that
+				// detects nick changes to change irc.currentNickname instead
+				// of blindly assuming that this operation succeeds
 				irc.currentNickname = irc.Nickname
 				irc.SendRawf("NICK %s", irc.Nickname)
 			}
 		case <-irc.endping:
 			// Shut down everything
-			ticker.Stop()
-			ticker2.Stop()
+			ping_ticker.Stop()
+			nr_ticker.Stop()
 			irc.pingerExit <- true
 			return
 		}
