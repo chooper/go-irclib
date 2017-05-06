@@ -153,12 +153,8 @@ func (irc *IRCClient) pingLoop() {
 		case <-nr_ticker.C:
 			// Try to recapture nickname if it's not as configured.
 			if irc.Nickname != irc.currentNickname {
-				// FIXME I'm pretty sure this doesn't work
-				// I mean, we should probably actually have a handler that
-				// detects nick changes to change irc.currentNickname instead
-				// of blindly assuming that this operation succeeds
 				irc.currentNickname = irc.Nickname
-				irc.SendRawf("NICK %s", irc.Nickname)
+				irc.Nick(irc.Nickname)
 			}
 		case <-irc.endping:
 			// Shut down everything
@@ -303,12 +299,17 @@ func defaultHandlers(event *Event) {
 		// client.SendRawf("NICK %s", client.currentNickname)
 
 	case "433":
+		// if the collision is during registration, currentNickname will be empty
+		if len(client.currentNickname) == 0 {
+			client.currentNickname = client.Nickname
+		}
+
 		if len(client.currentNickname) > 8 {
 			client.currentNickname = "_" + client.currentNickname
 		} else {
 			client.currentNickname = client.currentNickname + "_"
 		}
-		client.SendRawf("NICK %s", client.currentNickname)
+		client.Nick(client.currentNickname)
 
 	case "PONG":
 		ns, _ := strconv.ParseInt(event.Arguments[1], 10, 64)
