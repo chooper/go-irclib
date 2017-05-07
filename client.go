@@ -154,7 +154,7 @@ func (irc *IRCClient) pingLoop() {
 			// Try to recapture nickname if it's not as configured.
 			if irc.Nickname != irc.currentNickname {
 				irc.currentNickname = irc.Nickname
-				irc.Nick(irc.Nickname)
+				irc.SendRawf("NICK %s\r\n", irc.Nickname)
 			}
 		case <-irc.endping:
 			// Shut down everything
@@ -309,7 +309,7 @@ func defaultHandlers(event *Event) {
 		} else {
 			client.currentNickname = client.currentNickname + "_"
 		}
-		client.Nick(client.currentNickname)
+		client.SendRawf("NICK %s\r\n", client.currentNickname)
 
 	case "PONG":
 		ns, _ := strconv.ParseInt(event.Arguments[1], 10, 64)
