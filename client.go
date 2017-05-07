@@ -99,6 +99,7 @@ func (irc *IRCClient) readLoop() {
 
 		irc.LastMessage = time.Now()
 		msg = strings.Trim(msg, "\r\n")
+		log.Printf("<-- %s", strings.Trim(msg, "\r\n"))
 
 		// Parse raw message into Event struct
 		prefix, cmd, args := parseIRCMessage(msg)
