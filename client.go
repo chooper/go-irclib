@@ -145,7 +145,7 @@ func (irc *IRCClient) pingLoop() {
 		select {
 		case <-ping_ticker.C:
 			if time.Since(irc.LastMessage) < (5 * time.Second) {
-				irc.SendRawf("PING %s", time.Now().UnixNano())
+				irc.SendRawf("PING %d", time.Now().UnixNano())
 			} else {
 				irc.Reconnect()
 			}
@@ -153,7 +153,7 @@ func (irc *IRCClient) pingLoop() {
 			// Try to recapture nickname if it's not as configured.
 			if irc.Nickname != irc.currentNickname {
 				irc.currentNickname = irc.Nickname
-				irc.SendRawf("NICK %s\r\n", irc.Nickname)
+				irc.SendRawf("NICK %s", irc.Nickname)
 			}
 		case <-irc.endping:
 			// Shut down everything
