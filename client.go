@@ -139,15 +139,14 @@ func (irc *IRCClient) writeLoop() {
 
 // Detect if the server has died and drive nick reclaimation too
 func (irc *IRCClient) pingLoop() {
-	ping_ticker := time.NewTicker(5 * time.Second)
-	nr_ticker := time.NewTicker(1 * time.Minute)
+	ping_ticker := time.NewTicker(1 * time.Second)
+	nr_ticker := time.NewTicker(15 * time.Second)
 	for {
 		select {
 		case <-ping_ticker.C:
-			if time.Since(irc.LastMessage) < (15 * time.Second) {
+			if time.Since(irc.LastMessage) < (5 * time.Second) {
 				irc.SendRawf("PING %s", time.Now().UnixNano())
 			} else {
-				// Reconnect if it's been at least 30 seconds without data from server
 				irc.Reconnect()
 			}
 		case <-nr_ticker.C:
